@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Discovery Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0e0d;
+    --paper: #f5f2ee;
+    --accent: #c8602a;
+    --accent-light: #f0ddd2;
+    --rule: #d9d4cd;
+    --muted: #8a8278;
+    --success: #2a7a4b;
+    --card: #ffffff;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-rail {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--accent);
+    transition: width .4s ease;
+    z-index: 100;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: .12;
+  }
+  .header-tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 5vw, 46px);
+    line-height: 1.1;
+    margin-bottom: 14px;
+    max-width: 600px;
+  }
+  header p {
+    font-size: 14px;
+    color: #b0a99f;
+    max-width: 520px;
+  }
+
+  /* ── PROGRESS STEPS ── */
+  .steps-nav {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+    background: var(--card);
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .steps-nav::-webkit-scrollbar { display: none; }
+  .step-tab {
+    flex: 1;
+    min-width: 100px;
+    padding: 14px 10px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all .2s;
+    white-space: nowrap;
+    user-select: none;
+    position: relative;
+  }
+  .step-tab.active {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .step-tab.done {
+    color: var(--success);
+    border-color: transparent;
+  }
+  .step-tab.done::after {
+    content: '✓';
+    margin-left: 4px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .container {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 24px 120px;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    display: none;
+    animation: fadeUp .35s ease both;
+  }
+  .section.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    margin-bottom: 6px;
+  }
+  .section-desc {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 36px;
+    max-width: 520px;
+  }
+
+  /* ── QUESTION CARDS ── */
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 18px;
+    transition: box-shadow .2s, border-color .2s;
+  }
+  .q-card:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-light);
+  }
+  .q-number {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .q-label {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .q-hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  /* ── INPUTS ── */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="date"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--rule);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--paper);
+    outline: none;
+    transition: border-color .2s, background .2s;
+    resize: vertical;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    background: #fff;
+  }
+  textarea { min-height: 90px; }
+
+  /* ── RADIO / CHECKBOX PILLS ── */
+  .pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .pill-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: 1.5px solid var(--rule);
+    border-radius: 99px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all .15s;
+    user-select: none;
+  }
+  .pill-group input { display: none; }
+  .pill-group label:hover { border-color: var(--accent); color: var(--accent); }
+  .pill-group input:checked + span,
+  .pill-group label:has(input:checked) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .pill input:checked ~ * { color: #fff; }
+
+  /* workaround — JS handles active state */
+  .pill-group label.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── RANGE SLIDER ── */
+  .range-wrap { display: flex; align-items: center; gap: 12px; }
+  input[type="range"] {
+    -webkit-appearance: none;
+    flex: 1;
+    height: 4px;
+    background: var(--rule);
+    border-radius: 2px;
+    outline: none;
+    border: none;
+    padding: 0;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  }
+  .range-val {
+    min-width: 60px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--accent);
+  }
+
+  /* ── BUDGET SELECTOR ── */
+  .budget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+  }
+  .budget-card {
+    border: 1.5px solid var(--rule);
+    border-radius: 10px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+  }
+  .budget-card:hover { border-color: var(--accent); }
+  .budget-card.selected {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .budget-card .price {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .budget-card .tier {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+
+  /* ── NAVIGATION BUTTONS ── */
+  .nav-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--rule);
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 60;
+  }
+  .nav-bar .completion {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .nav-right { display: flex; gap: 10px; }
+  .btn {
+    padding: 11px 24px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid var(--rule);
+    color: var(--ink);
+  }
+  .btn-ghost:hover { border-color: var(--ink); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(200,96,42,.35);
+  }
+  .btn-primary:hover { background: #b0521f; }
+  .btn-success {
+    background: var(--success);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(42,122,75,.35);
+  }
+
+  /* ── SUMMARY / PRINT ── */
+  #summary-section {
+    display: none;
+  }
+  #summary-section.active { display: block; }
+
+  .summary-block {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .summary-block h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .summary-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 8px 16px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0ede9;
+    font-size: 14px;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-key { color: var(--muted); font-size: 13px; }
+  .summary-val { font-weight: 500; word-break: break-word; }
+
+  .print-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 28px;
+  }
+
+  /* ── ICONS ── */
+  .ico { font-size: 20px; }
+
+  /* ── REQUIRED STAR ── */
+  .req { color: var(--accent); margin-left: 2px; }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    .steps-nav, .nav-bar, header::before { display: none !important; }
+    .section { display: block !important; }
+    #summary-section { display: block !important; }
+    body { background: #fff; }
+    .q-card, .summary-block { break-inside: avoid; }
+    #progress-rail { display: none; }
+  }
+
+  @media (max-width: 500px) {
+    header { padding: 36px 20px 28px; }
+    .container { padding: 32px 16px 100px; }
+    .summary-row { grid-template-columns: 1fr; }
+    .budget-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-rail"></div>
+
+<header>
+  <div class="header-tag">Client Discovery Brief</div>
+  <h1>Let's Build Something Great Together</h1>
+  <p>Fill in this short brief so we can understand your project and deliver exactly what you need — no surprises.</p>
+</header>
+
+<nav class="steps-nav" id="stepsNav">
+  <div class="step-tab active" data-step="0">01 · About You</div>
+  <div class="step-tab" data-step="1">02 · Goals</div>
+  <div class="step-tab" data-step="2">03 · Survey</div>
+  <div class="step-tab" data-step="3">04 · Website</div>
+  <div class="step-tab" data-step="4">05 · Data & Admin</div>
+  <div class="step-tab" data-step="5">06 · Logistics</div>
+  <div class="step-tab" data-step="6">07 · Review</div>
+</nav>
+
+<div class="container">
+
+  <!-- ══ STEP 0: About You ══ -->
+  <div class="section active" id="step-0">
+    <div class="section-label">Section 01</div>
+    <div class="section-title">About You & Your Organisation</div>
+    <div class="section-desc">Basic details so we know who we're working with.</div>
+
+    <div class="q-card">
+      <div class="q-number">Q1</div>
+      <div class="q-label">Your full name <span class="req">*</span></div>
+      <input type="text" id="q1" placeholder="e.g. Jane Mwangi" />
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q2</div>
+      <div class="q-label">Organisation / Business name <span class="req">*</span></div>
+      <input type="text" id="q2" placeholder="e.g. Nakuru Research Group" />
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q3</div>
+      <div class="q-label">Email address <span class="req">*</span></div>
+      <input type="email" id="q3" placeholder="you@example.com" />
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q4</div>
+      <div class="q-label">Phone / WhatsApp number</div>
+      <input type="tel" id="q4" placeholder="+254 7XX XXX XXX" />
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q5</div>
+      <div class="q-label">What industry or sector do you operate in?</div>
+      <div class="pill-group" id="q5-pills">
+        <label><input type="radio" name="q5" value="Research & Academia"> <span>Research & Academia</span></label>
+        <label><input type="radio" name="q5" value="Government / NGO"> <span>Government / NGO</span></label>
+        <label><input type="radio" name="q5" value="Private Business"> <span>Private Business</span></label>
+        <label><input type="radio" name="q5" value="Healthcare"> <span>Healthcare</span></label>
+        <label><input type="radio" name="q5" value="Education"> <span>Education</span></label>
+        <label><input type="radio" name="q5" value="Other"> <span>Other</span></label>
+      </div>
+      <input type="text" id="q5-other" placeholder="If other, describe your industry..." style="margin-top:10px;display:none"/>
+    </div>
+  </div>
+
+  <!-- ══ STEP 1: Goals ══ -->
+  <div class="section" id="step-1">
+    <div class="section-label">Section 02</div>
+    <div class="section-title">Project Goals</div>
+    <div class="section-desc">Help us understand the purpose behind this project.</div>
+
+    <div class="q-card">
+      <div class="q-number">Q6</div>
+      <div class="q-label">What is the primary goal of this project? <span class="req">*</span></div>
+      <div class="q-hint">Select all that apply.</div>
+      <div class="pill-group" id="q6-pills">
+        <label><input type="checkbox" name="q6" value="Market Research"> <span>Market Research</span></label>
+        <label><input type="checkbox" name="q6" value="Customer Feedback"> <span>Customer Feedback</span></label>
+        <label><input type="checkbox" name="q6" value="Build a Business Directory"> <span>Business Directory</span></label>
+        <label><input type="checkbox" name="q6" value="Lead Generation"> <span>Lead Generation</span></label>
+        <label><input type="checkbox" name="q6" value="Public Data Collection"> <span>Public Data Collection</span></label>
+        <label><input type="checkbox" name="q6" value="Other"> <span>Other</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q7</div>
+      <div class="q-label">Describe what you are trying to achieve in your own words</div>
+      <textarea id="q7" placeholder="e.g. We want to collect data on how small businesses in Nairobi use digital tools..."></textarea>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q8</div>
+      <div class="q-label">Who will be filling out the survey?</div>
+      <div class="pill-group" id="q8-pills">
+        <label><input type="radio" name="q8" value="Business Owners"> <span>Business Owners</span></label>
+        <label><input type="radio" name="q8" value="Customers"> <span>Customers</span></label>
+        <label><input type="radio" name="q8" value="General Public"> <span>General Public</span></label>
+        <label><input type="radio" name="q8" value="Employees"> <span>Employees</span></label>
+        <label><input type="radio" name="q8" value="Mixed"> <span>Mixed / All of the above</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q9</div>
+      <div class="q-label">Which regions or counties are you targeting?</div>
+      <input type="text" id="q9" placeholder="e.g. Nairobi, Mombasa, or Nationwide" />
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q10</div>
+      <div class="q-label">Do you plan to monetise or sell the collected data or insights?</div>
+      <div class="pill-group" id="q10-pills">
+        <label><input type="radio" name="q10" value="Yes"> <span>Yes</span></label>
+        <label><input type="radio" name="q10" value="No"> <span>No</span></label>
+        <label><input type="radio" name="q10" value="Not sure yet"> <span>Not sure yet</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 2: Survey ══ -->
+  <div class="section" id="step-2">
+    <div class="section-label">Section 03</div>
+    <div class="section-title">Survey Requirements</div>
+    <div class="section-desc">Tell us what kind of form or survey system you need.</div>
+
+    <div class="q-card">
+      <div class="q-number">Q11</div>
+      <div class="q-label">What types of questions will the survey include?</div>
+      <div class="q-hint">Select all that apply.</div>
+      <div class="pill-group" id="q11-pills">
+        <label><input type="checkbox" name="q11" value="Multiple Choice"> <span>Multiple Choice</span></label>
+        <label><input type="checkbox" name="q11" value="Short Text"> <span>Short Text Answers</span></label>
+        <label><input type="checkbox" name="q11" value="Long Text"> <span>Long Responses</span></label>
+        <label><input type="checkbox" name="q11" value="File Uploads"> <span>File Uploads</span></label>
+        <label><input type="checkbox" name="q11" value="Star Ratings"> <span>Star / Ratings</span></label>
+        <label><input type="checkbox" name="q11" value="Location / Map"> <span>Location / Map</span></label>
+        <label><input type="checkbox" name="q11" value="Date & Time"> <span>Date & Time</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q12</div>
+      <div class="q-label">Approximately how many questions per survey?</div>
+      <div class="range-wrap">
+        <input type="range" min="1" max="60" value="15" id="q12-range" oninput="document.getElementById('q12-val').textContent=this.value+' questions'">
+        <span class="range-val" id="q12-val">15 questions</span>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q13</div>
+      <div class="q-label">Will you need multiple different surveys, or one main survey?</div>
+      <div class="pill-group" id="q13-pills">
+        <label><input type="radio" name="q13" value="One main survey"> <span>One main survey</span></label>
+        <label><input type="radio" name="q13" value="Multiple surveys"> <span>Multiple surveys</span></label>
+        <label><input type="radio" name="q13" value="Not sure"> <span>Not sure yet</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q14</div>
+      <div class="q-label">Should questions change based on previous answers? (Conditional logic)</div>
+      <div class="pill-group" id="q14-pills">
+        <label><input type="radio" name="q14" value="Yes"> <span>Yes, definitely</span></label>
+        <label><input type="radio" name="q14" value="No"> <span>No, keep it simple</span></label>
+        <label><input type="radio" name="q14" value="Nice to have"> <span>Nice to have later</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q15</div>
+      <div class="q-label">Should respondents need to create an account, or fill anonymously?</div>
+      <div class="pill-group" id="q15-pills">
+        <label><input type="radio" name="q15" value="Anonymous"> <span>Anonymous</span></label>
+        <label><input type="radio" name="q15" value="Require account"> <span>Require login/account</span></label>
+        <label><input type="radio" name="q15" value="Both options"> <span>Offer both options</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q16</div>
+      <div class="q-label">Should users be able to save progress and continue later?</div>
+      <div class="pill-group" id="q16-pills">
+        <label><input type="radio" name="q16" value="Yes"> <span>Yes</span></label>
+        <label><input type="radio" name="q16" value="No"> <span>No</span></label>
+        <label><input type="radio" name="q16" value="Not important"> <span>Not important</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q17</div>
+      <div class="q-label">Do you require anti-spam protection? (CAPTCHA / verification)</div>
+      <div class="pill-group" id="q17-pills">
+        <label><input type="radio" name="q17" value="Yes"> <span>Yes</span></label>
+        <label><input type="radio" name="q17" value="No"> <span>No</span></label>
+        <label><input type="radio" name="q17" value="Not sure"> <span>Not sure</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 3: Website ══ -->
+  <div class="section" id="step-3">
+    <div class="section-label">Section 04</div>
+    <div class="section-title">Website Requirements</div>
+    <div class="section-desc">Tell us what pages and features the website needs.</div>
+
+    <div class="q-card">
+      <div class="q-number">Q18</div>
+      <div class="q-label">Which pages should the website include?</div>
+      <div class="q-hint">Select all that apply.</div>
+      <div class="pill-group" id="q18-pills">
+        <label><input type="checkbox" name="q18" value="Home"> <span>Home</span></label>
+        <label><input type="checkbox" name="q18" value="About"> <span>About</span></label>
+        <label><input type="checkbox" name="q18" value="Survey Page"> <span>Survey Page</span></label>
+        <label><input type="checkbox" name="q18" value="Contact"> <span>Contact</span></label>
+        <label><input type="checkbox" name="q18" value="Data Insights"> <span>Data Insights</span></label>
+        <label><input type="checkbox" name="q18" value="Blog / News"> <span>Blog / News</span></label>
+        <label><input type="checkbox" name="q18" value="FAQ"> <span>FAQ</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q19</div>
+      <div class="q-label">Do you already have a logo, brand colours, or fonts?</div>
+      <div class="pill-group" id="q19-pills">
+        <label><input type="radio" name="q19" value="Yes, full branding"> <span>Yes, full branding</span></label>
+        <label><input type="radio" name="q19" value="Partial (logo only)"> <span>Partial (logo only)</span></label>
+        <label><input type="radio" name="q19" value="No, needs to be created"> <span>No, needs creating</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q20</div>
+      <div class="q-label">Will you provide the website text/copy, or should I write it?</div>
+      <div class="pill-group" id="q20-pills">
+        <label><input type="radio" name="q20" value="I will provide all content"> <span>I will provide all content</span></label>
+        <label><input type="radio" name="q20" value="You write it"> <span>You write it for me</span></label>
+        <label><input type="radio" name="q20" value="Mix"> <span>Mix — some I provide, some you write</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q21</div>
+      <div class="q-label">Are there any websites whose design you admire?</div>
+      <div class="q-hint">Share links or describe what you like.</div>
+      <textarea id="q21" placeholder="e.g. I like the clean layout of google.com, or the dark colours of Notion..."></textarea>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q22</div>
+      <div class="q-label">What tone should the website feel like?</div>
+      <div class="pill-group" id="q22-pills">
+        <label><input type="radio" name="q22" value="Formal & Corporate"> <span>Formal & Corporate</span></label>
+        <label><input type="radio" name="q22" value="Friendly & Modern"> <span>Friendly & Modern</span></label>
+        <label><input type="radio" name="q22" value="Bold & Striking"> <span>Bold & Striking</span></label>
+        <label><input type="radio" name="q22" value="Simple & Minimal"> <span>Simple & Minimal</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q23</div>
+      <div class="q-label">Do you have an existing domain name / website address?</div>
+      <div class="pill-group" id="q23-pills">
+        <label><input type="radio" name="q23" value="Yes"> <span>Yes</span></label>
+        <label><input type="radio" name="q23" value="No, I need one"> <span>No, I need one</span></label>
+      </div>
+      <input type="text" id="q23-domain" placeholder="If yes, enter your domain name..." style="margin-top:10px;display:none"/>
+    </div>
+  </div>
+
+  <!-- ══ STEP 4: Data & Admin ══ -->
+  <div class="section" id="step-4">
+    <div class="section-label">Section 05</div>
+    <div class="section-title">Data Management & Admin</div>
+    <div class="section-desc">How should data be stored, accessed, and used?</div>
+
+    <div class="q-card">
+      <div class="q-number">Q24</div>
+      <div class="q-label">Should the system include a dashboard to view responses and analytics?</div>
+      <div class="pill-group" id="q24-pills">
+        <label><input type="radio" name="q24" value="Yes, definitely"> <span>Yes, definitely</span></label>
+        <label><input type="radio" name="q24" value="Basic view only"> <span>Basic view only</span></label>
+        <label><input type="radio" name="q24" value="No"> <span>No</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q25</div>
+      <div class="q-label">What data export formats do you need?</div>
+      <div class="pill-group" id="q25-pills">
+        <label><input type="checkbox" name="q25" value="CSV / Excel"> <span>CSV / Excel</span></label>
+        <label><input type="checkbox" name="q25" value="PDF Report"> <span>PDF Report</span></label>
+        <label><input type="checkbox" name="q25" value="Charts / Graphs"> <span>Charts / Graphs</span></label>
+        <label><input type="checkbox" name="q25" value="None needed"> <span>None needed</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q26</div>
+      <div class="q-label">Who in your organisation should have access to the collected data?</div>
+      <textarea id="q26" placeholder="e.g. Only me as the director, or our full team of 5 staff members..."></textarea>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q27</div>
+      <div class="q-label">Should admins be able to create and edit surveys themselves?</div>
+      <div class="pill-group" id="q27-pills">
+        <label><input type="radio" name="q27" value="Yes"> <span>Yes</span></label>
+        <label><input type="radio" name="q27" value="No, only the developer"> <span>No, only the developer</span></label>
+        <label><input type="radio" name="q27" value="Not sure"> <span>Not sure</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q28</div>
+      <div class="q-label">Will the survey collect any sensitive personal information?</div>
+      <div class="q-hint">e.g. ID numbers, financial data, health information</div>
+      <div class="pill-group" id="q28-pills">
+        <label><input type="radio" name="q28" value="Yes"> <span>Yes</span></label>
+        <label><input type="radio" name="q28" value="No"> <span>No</span></label>
+        <label><input type="radio" name="q28" value="Possibly"> <span>Possibly</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q29</div>
+      <div class="q-label">Should users see a privacy / consent notice before submitting?</div>
+      <div class="pill-group" id="q29-pills">
+        <label><input type="radio" name="q29" value="Yes"> <span>Yes</span></label>
+        <label><input type="radio" name="q29" value="No"> <span>No</span></label>
+        <label><input type="radio" name="q29" value="Not sure"> <span>Not sure</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q30</div>
+      <div class="q-label">Should you receive an email notification when someone submits a response?</div>
+      <div class="pill-group" id="q30-pills">
+        <label><input type="radio" name="q30" value="Yes"> <span>Yes</span></label>
+        <label><input type="radio" name="q30" value="No"> <span>No</span></label>
+        <label><input type="radio" name="q30" value="Only for certain events"> <span>Only for certain events</span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ STEP 5: Logistics ══ -->
+  <div class="section" id="step-5">
+    <div class="section-label">Section 06</div>
+    <div class="section-title">Timeline, Budget & Ownership</div>
+    <div class="section-desc">Important practicalities so we can plan the project properly.</div>
+
+    <div class="q-card">
+      <div class="q-number">Q31</div>
+      <div class="q-label">What is your ideal launch / completion date?</div>
+      <input type="date" id="q31" />
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q32</div>
+      <div class="q-label">Approximately how many survey responses do you expect per month?</div>
+      <div class="pill-group" id="q32-pills">
+        <label><input type="radio" name="q32" value="Under 100"> <span>Under 100</span></label>
+        <label><input type="radio" name="q32" value="100 – 500"> <span>100 – 500</span></label>
+        <label><input type="radio" name="q32" value="500 – 2,000"> <span>500 – 2,000</span></label>
+        <label><input type="radio" name="q32" value="2,000+"> <span>2,000+</span></label>
+        <label><input type="radio" name="q32" value="Not sure"> <span>Not sure</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q33</div>
+      <div class="q-label">What is your estimated budget range?</div>
+      <div class="q-hint">These are approximate ranges for planning purposes.</div>
+      <div class="budget-grid" id="budget-grid">
+        <div class="budget-card" data-val="KSh 15,000 – 30,000">
+          <span class="price">KSh 15K–30K</span>
+          <span class="tier">Starter</span>
+        </div>
+        <div class="budget-card" data-val="KSh 30,000 – 50,000">
+          <span class="price">KSh 30K–50K</span>
+          <span class="tier">Standard</span>
+        </div>
+        <div class="budget-card" data-val="KSh 50,000 – 80,000">
+          <span class="price">KSh 50K–80K</span>
+          <span class="tier">Advanced</span>
+        </div>
+        <div class="budget-card" data-val="KSh 80,000+">
+          <span class="price">KSh 80K+</span>
+          <span class="tier">Full Platform</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q34</div>
+      <div class="q-label">Who will pay for and manage hosting after launch?</div>
+      <div class="pill-group" id="q34-pills">
+        <label><input type="radio" name="q34" value="I will manage it myself"> <span>I'll manage it myself</span></label>
+        <label><input type="radio" name="q34" value="You manage it for me"> <span>You manage it for me</span></label>
+        <label><input type="radio" name="q34" value="Let's discuss"> <span>Let's discuss</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q35</div>
+      <div class="q-label">Will you need ongoing maintenance and updates after launch?</div>
+      <div class="pill-group" id="q35-pills">
+        <label><input type="radio" name="q35" value="Yes, monthly retainer"> <span>Yes, monthly retainer</span></label>
+        <label><input type="radio" name="q35" value="Only when needed"> <span>Only when needed</span></label>
+        <label><input type="radio" name="q35" value="No"> <span>No</span></label>
+      </div>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q36</div>
+      <div class="q-label">How would you describe a successful outcome for this project?</div>
+      <div class="q-hint">What would make you feel the project was worth every shilling?</div>
+      <textarea id="q36" placeholder="e.g. We have a working survey collecting 200+ responses a month and a clean dashboard to view the data..."></textarea>
+    </div>
+
+    <div class="q-card">
+      <div class="q-number">Q37</div>
+      <div class="q-label">Any other information, requirements, or questions?</div>
+      <textarea id="q37" placeholder="Anything else you'd like me to know about this project..."></textarea>
+    </div>
+  </div>
+
+  <!-- ══ STEP 6: Summary ══ -->
+  <div class="section" id="step-6" style="display:none">
+    <div class="section-label">Section 07</div>
+    <div class="section-title">Your Discovery Brief</div>
+    <div class="section-desc">Here's a summary of everything you've filled in. Click the button below to send it to your developer and save a copy.</div>
+
+    <div id="summary-output"></div>
+
+    <!-- Send status banner -->
+    <div id="send-status" style="display:none; margin-top:20px; padding:14px 20px; border-radius:10px; font-size:14px; font-weight:500;"></div>
+
+    <div class="print-btn">
+      <button class="btn btn-primary" id="submit-btn" onclick="submitAndPrint()">📤 Submit &amp; Save as PDF</button>
+      <button class="btn btn-ghost" onclick="goToStep(0)">← Edit Answers</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- NAVIGATION BAR -->
+<div class="nav-bar">
+  <span class="completion" id="completion-text">Step 1 of 7</span>
+  <div class="nav-right">
+    <button class="btn btn-ghost" id="btn-back" onclick="prevStep()" style="display:none">← Back</button>
+    <button class="btn btn-primary" id="btn-next" onclick="nextStep()">Next →</button>
+  </div>
+</div>
+
+<script>
+  let currentStep = 0;
+  const totalSteps = 7;
+  let selectedBudget = '';
+
+  // ── STEP NAVIGATION ──
+  function goToStep(n) {
+    // hide current
+    document.getElementById('step-' + currentStep)?.classList.remove('active');
+    if (currentStep === 6) document.getElementById('step-6').style.display = 'none';
+
+    currentStep = n;
+
+    // show new
+    const el = document.getElementById('step-' + currentStep);
+    if (el) {
+      if (currentStep === 6) { el.style.display = 'block'; buildSummary(); }
+      el.classList.add('active');
+    }
+
+    // tabs
+    document.querySelectorAll('.step-tab').forEach((t, i) => {
+      t.classList.toggle('active', i === currentStep);
+    });
+
+    // scroll nav tab into view
+    const activeTab = document.querySelector('.step-tab.active');
+    if (activeTab) activeTab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+
+    // buttons
+    document.getElementById('btn-back').style.display = currentStep > 0 ? 'inline-flex' : 'none';
+    document.getElementById('btn-next').textContent = currentStep === totalSteps - 2 ? 'Review Brief →' : currentStep === totalSteps - 1 ? '✓ Done' : 'Next →';
+    if (currentStep === totalSteps - 1) document.getElementById('btn-next').style.display = 'none';
+    else document.getElementById('btn-next').style.display = 'inline-flex';
+
+    // progress
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('completion-text').textContent = 'Step ' + (currentStep + 1) + ' of ' + totalSteps;
+  }
+
+  function nextStep() { if (currentStep < totalSteps - 1) goToStep(currentStep + 1); }
+  function prevStep() { if (currentStep > 0) goToStep(currentStep - 1); }
+
+  function updateProgress() {
+    const pct = ((currentStep) / (totalSteps - 1)) * 100;
+    document.getElementById('progress-rail').style.width = pct + '%';
+  }
+
+  // Tab click
+  document.querySelectorAll('.step-tab').forEach((tab, i) => {
+    tab.addEventListener('click', () => goToStep(i));
+  });
+
+  // ── PILL SELECTION ──
+  document.querySelectorAll('.pill-group').forEach(group => {
+    group.addEventListener('click', e => {
+      const lbl = e.target.closest('label');
+      if (!lbl) return;
+      const inp = lbl.querySelector('input');
+      if (!inp) return;
+
+      if (inp.type === 'radio') {
+        group.querySelectorAll('label').forEach(l => l.classList.remove('selected'));
+        lbl.classList.add('selected');
+        inp.checked = true;
+
+        // Show/hide conditionals
+        if (inp.name === 'q5' && inp.value === 'Other') {
+          document.getElementById('q5-other').style.display = 'block';
+        } else if (inp.name === 'q5') {
+          document.getElementById('q5-other').style.display = 'none';
+        }
+        if (inp.name === 'q23' && inp.value === 'Yes') {
+          document.getElementById('q23-domain').style.display = 'block';
+        } else if (inp.name === 'q23') {
+          document.getElementById('q23-domain').style.display = 'none';
+        }
+      } else {
+        lbl.classList.toggle('selected');
+        inp.checked = !inp.checked;
+      }
+    });
+  });
+
+  // ── BUDGET CARDS ──
+  document.querySelectorAll('.budget-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.budget-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedBudget = card.dataset.val;
+    });
+  });
+
+  // ── BUILD SUMMARY ──
+  function getVal(id) {
+    const el = document.getElementById(id);
+    return el ? (el.value || '—') : '—';
+  }
+  function getChecked(name) {
+    const checked = [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(i => i.value);
+    return checked.length ? checked.join(', ') : '—';
+  }
+  function getRange(id) {
+    const el = document.getElementById(id + '-val');
+    return el ? el.textContent : '—';
+  }
+
+  function buildSummary() {
+    const sections = [
+      {
+        icon: '👤', title: 'About You',
+        rows: [
+          ['Full Name', getVal('q1')],
+          ['Organisation', getVal('q2')],
+          ['Email', getVal('q3')],
+          ['Phone', getVal('q4')],
+          ['Industry', getChecked('q5')],
+        ]
+      },
+      {
+        icon: '🎯', title: 'Project Goals',
+        rows: [
+          ['Primary Goals', getChecked('q6')],
+          ['Description', getVal('q7')],
+          ['Target Users', getChecked('q8')],
+          ['Target Region', getVal('q9')],
+          ['Monetise Data', getChecked('q10')],
+        ]
+      },
+      {
+        icon: '📋', title: 'Survey Requirements',
+        rows: [
+          ['Question Types', getChecked('q11')],
+          ['Questions Per Survey', getRange('q12')],
+          ['Number of Surveys', getChecked('q13')],
+          ['Conditional Logic', getChecked('q14')],
+          ['User Accounts', getChecked('q15')],
+          ['Save Progress', getChecked('q16')],
+          ['Anti-Spam / CAPTCHA', getChecked('q17')],
+        ]
+      },
+      {
+        icon: '🌐', title: 'Website Requirements',
+        rows: [
+          ['Pages Needed', getChecked('q18')],
+          ['Existing Branding', getChecked('q19')],
+          ['Content Responsibility', getChecked('q20')],
+          ['Design Inspiration', getVal('q21')],
+          ['Website Tone', getChecked('q22')],
+          ['Domain Name', getChecked('q23') + (document.getElementById('q23-domain')?.value ? ' — ' + document.getElementById('q23-domain').value : '')],
+        ]
+      },
+      {
+        icon: '🗄️', title: 'Data & Admin',
+        rows: [
+          ['Dashboard', getChecked('q24')],
+          ['Export Formats', getChecked('q25')],
+          ['Data Access', getVal('q26')],
+          ['Admin Can Edit Surveys', getChecked('q27')],
+          ['Sensitive Data', getChecked('q28')],
+          ['Privacy Consent Notice', getChecked('q29')],
+          ['Email Notifications', getChecked('q30')],
+        ]
+      },
+      {
+        icon: '📅', title: 'Timeline & Budget',
+        rows: [
+          ['Target Launch Date', getVal('q31')],
+          ['Expected Monthly Responses', getChecked('q32')],
+          ['Budget Range', selectedBudget || '—'],
+          ['Hosting Ownership', getChecked('q34')],
+          ['Ongoing Maintenance', getChecked('q35')],
+          ['Success Definition', getVal('q36')],
+          ['Additional Notes', getVal('q37')],
+        ]
+      },
+    ];
+
+    let html = '';
+    sections.forEach(sec => {
+      html += `<div class="summary-block"><h3><span class="ico">${sec.icon}</span> ${sec.title}</h3>`;
+      sec.rows.forEach(([k, v]) => {
+        html += `<div class="summary-row"><div class="summary-key">${k}</div><div class="summary-val">${v}</div></div>`;
+      });
+      html += '</div>';
+    });
+
+    document.getElementById('summary-output').innerHTML = html;
+  }
+
+  // Init
+  goToStep(0);
+
+  // ── COLLECT ALL DATA ──
+  function collectAllData() {
+    return {
+      submitted_at: new Date().toLocaleString('en-KE', { timeZone: 'Africa/Nairobi' }),
+      // Section 1 – About You
+      full_name:        getVal('q1'),
+      organisation:     getVal('q2'),
+      email:            getVal('q3'),
+      phone:            getVal('q4'),
+      industry:         getChecked('q5'),
+      industry_other:   getVal('q5-other'),
+      // Section 2 – Goals
+      primary_goals:        getChecked('q6'),
+      project_description:  getVal('q7'),
+      target_users:         getChecked('q8'),
+      target_region:        getVal('q9'),
+      monetise_data:        getChecked('q10'),
+      // Section 3 – Survey
+      question_types:       getChecked('q11'),
+      questions_per_survey: getRange('q12'),
+      number_of_surveys:    getChecked('q13'),
+      conditional_logic:    getChecked('q14'),
+      user_accounts:        getChecked('q15'),
+      save_progress:        getChecked('q16'),
+      anti_spam:            getChecked('q17'),
+      // Section 4 – Website
+      pages_needed:          getChecked('q18'),
+      existing_branding:     getChecked('q19'),
+      content_responsibility:getChecked('q20'),
+      design_inspiration:    getVal('q21'),
+      website_tone:          getChecked('q22'),
+      has_domain:            getChecked('q23'),
+      domain_name:           getVal('q23-domain'),
+      // Section 5 – Data & Admin
+      dashboard:             getChecked('q24'),
+      export_formats:        getChecked('q25'),
+      data_access:           getVal('q26'),
+      admin_edit_surveys:    getChecked('q27'),
+      sensitive_data:        getChecked('q28'),
+      privacy_notice:        getChecked('q29'),
+      email_notifications:   getChecked('q30'),
+      // Section 6 – Logistics
+      launch_date:           getVal('q31'),
+      monthly_responses:     getChecked('q32'),
+      budget_range:          selectedBudget || '—',
+      hosting_ownership:     getChecked('q34'),
+      ongoing_maintenance:   getChecked('q35'),
+      success_definition:    getVal('q36'),
+      additional_notes:      getVal('q37'),
+    };
+  }
+
+  // ── SUBMIT TO WEBHOOK + PRINT ──
+  async function submitAndPrint() {
+    const btn = document.getElementById('submit-btn');
+    const statusEl = document.getElementById('send-status');
+
+    // Disable button immediately
+    btn.disabled = true;
+    btn.textContent = '⏳ Sending...';
+
+    const data = collectAllData();
+
+    // Fire webhook (don't await — trigger print in parallel)
+    const webhookPromise = fetch('https://n8n.autom8abel.com/webhook/c17bc998-1a47-4870-8a54-9e3d3525a299', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    // Show success immediately (optimistic — no loading screen)
+    statusEl.style.display = 'block';
+    statusEl.style.background = '#e8f5ee';
+    statusEl.style.border = '1px solid #a8d5b8';
+    statusEl.style.color = '#1a5c35';
+    statusEl.innerHTML = '✅ <strong>Brief sent successfully!</strong> Your developer will receive it shortly. Preparing your PDF...';
+
+    btn.textContent = '✓ Sent — Saving PDF...';
+    btn.style.background = 'var(--success)';
+
+    // Trigger print after a short pause so the status banner renders
+    setTimeout(() => {
+      window.print();
+      btn.textContent = '✓ Done';
+    }, 800);
+
+    // Handle webhook errors silently in background
+    webhookPromise.catch(() => {
+      statusEl.style.background = '#fff3e0';
+      statusEl.style.border = '1px solid #ffcc80';
+      statusEl.style.color = '#7a4500';
+      statusEl.innerHTML = '⚠️ <strong>PDF saved.</strong> There was a connection issue sending to your developer — please forward the PDF manually.';
+    });
+  }
+</script>
+</body>
+</html>
